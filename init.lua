@@ -255,6 +255,16 @@ require('lazy').setup({
     },
   },
   {
+    'mrcjkb/rustaceanvim',
+    lazy = false,
+    version = '^0.4',
+  },
+  {
+    'windwp/nvim-autopairs',
+    event = 'InsertEnter',
+    config = true,
+  },
+  {
     'williamboman/mason.nvim',
     opts = {
       ensure_installed = {
@@ -270,6 +280,10 @@ require('lazy').setup({
   },
   {
     'christoomey/vim-tmux-navigator',
+    lazy = false,
+  },
+  {
+    'lervag/vimtex',
     lazy = false,
   },
 
@@ -463,7 +477,6 @@ require('lazy').setup({
         opts = {
           ensure_installed = {
             'clangd',
-            'rust-analyzer',
             'go_pls',
             'clang_format',
           },
