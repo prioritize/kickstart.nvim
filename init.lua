@@ -249,6 +249,18 @@ require('lazy').setup({
     },
   },
   {
+    'windwp/nvim-autopairs',
+    event = 'InsertEnter',
+    config = true,
+    -- use opts = {} for passing setup options
+    -- this is equalent to setup({}) function
+  },
+  {
+    'mrcjkb/rustaceanvim',
+    version = '^4', -- Recommended
+    lazy = false, -- This plugin is already lazy
+  },
+  {
     'akinsho/toggleterm.nvim',
     version = '*',
     config = true,
