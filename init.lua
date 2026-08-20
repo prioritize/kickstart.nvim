@@ -687,14 +687,65 @@ require('lazy').setup({
     version = '^4', -- Recommended
     lazy = false, -- This plugin is already lazy
   },
-  { 'wakatime/vim-wakatime', lazy = false },
   {
     'akinsho/toggleterm.nvim',
     version = '*',
-    config = true,
-    opts = {
-      vim.keymap.set('n', '<leader>h', '<cmd>ToggleTerm<CR>', { desc = 'toggleterm toggle terminal' }),
+    cmd = { 'ToggleTerm', 'TermExec' },
+    keys = {
+      {
+        '<leader>tt',
+        function()
+          require('toggleterm').toggle(vim.v.count1, nil, nil, 'float')
+        end,
+        desc = 'Toggle Terminal (float) [count = terminal #]',
+      },
+      {
+        '<leader>th',
+        function()
+          require('toggleterm').toggle(vim.v.count1, nil, nil, 'horizontal')
+        end,
+        desc = 'Toggle Terminal (horizontal) [count = terminal #]',
+      },
+      {
+        '<leader>tv',
+        function()
+          require('toggleterm').toggle(vim.v.count1, 80, nil, 'vertical')
+        end,
+        desc = 'Toggle Terminal (vertical) [count = terminal #]',
+      },
+      {
+        '<leader>tT',
+        function()
+          require('toggleterm').toggle(vim.v.count1, nil, nil, 'tab')
+        end,
+        desc = 'Toggle Terminal (tab) [count = terminal #]',
+      },
     },
+    opts = {
+      size = 15,
+      open_mapping = [[<C-\>]],
+      direction = 'float',
+      shade_terminals = true,
+      float_opts = {
+        border = 'curved',
+      },
+    },
+    config = function(_, opts)
+      require('toggleterm').setup(opts)
+
+      -- Use normal-mode style navigation/escape while inside a toggleterm buffer
+      vim.api.nvim_create_autocmd('TermOpen', {
+        pattern = 'term://*toggleterm#*',
+        callback = function(event)
+          local map_opts = { buffer = event.buf }
+          vim.keymap.set('t', '<esc>', [[<C-\><C-n>]], map_opts)
+          vim.keymap.set('t', '<C-h>', [[<Cmd>wincmd h<CR>]], map_opts)
+          vim.keymap.set('t', '<C-j>', [[<Cmd>wincmd j<CR>]], map_opts)
+          vim.keymap.set('t', '<C-k>', [[<Cmd>wincmd k<CR>]], map_opts)
+          vim.keymap.set('t', '<C-l>', [[<Cmd>wincmd l<CR>]], map_opts)
+        end,
+      })
+    end,
   },
   {
     'williamboman/mason.nvim',
@@ -962,9 +1013,9 @@ require('lazy').setup({
             Snacks.picker.lsp_workspace_symbols()
           end, 'Open Workspace Symbols')
 
-          map('gt', function()
-            Snacks.picker.lsp_type_definitions()
-          end, '[G]oto [T]ype Definition')
+          -- NOTE: 'gt' is left unmapped here so it keeps its native Vim meaning
+          -- (next tab). Goto Type Definition is available via 'gy' (see the
+          -- snacks.nvim keys table above).
 
           -- -- Jump to the definition of the word under your cursor.
           -- --  This is where a variable was first declared, or where a function is defined, etc.
@@ -1355,7 +1406,7 @@ require('lazy').setup({
       -- Prefer git instead of curl in order to improve connectivity in some environments
       require('nvim-treesitter.install').prefer_git = true
       ---@diagnostic disable-next-line: missing-fields
-      require('nvim-treesitter.configs').setup(opts)
+      require('nvim-treesitter.config').setup(opts)
 
       -- There are additional nvim-treesitter modules that you can use to interact
       -- with nvim-treesitter. You should go explore a few and see what interests you:
