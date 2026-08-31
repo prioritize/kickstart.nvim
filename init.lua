@@ -702,7 +702,15 @@ require('lazy').setup({
       {
         '<leader>th',
         function()
-          require('toggleterm').toggle(vim.v.count1, nil, nil, 'horizontal')
+          -- toggleterm's find_open_windows() ignores direction, so an open
+          -- float/vertical/tab terminal would otherwise get split off of
+          -- (inheriting its full height) instead of a fresh bottom split
+          for _, term in pairs(require('toggleterm.terminal').get_all(true)) do
+            if term.direction ~= 'horizontal' and term:is_open() then
+              term:close()
+            end
+          end
+          require('toggleterm').toggle(vim.v.count1, 15, nil, 'horizontal')
         end,
         desc = 'Toggle Terminal (horizontal) [count = terminal #]',
       },
@@ -712,13 +720,6 @@ require('lazy').setup({
           require('toggleterm').toggle(vim.v.count1, 80, nil, 'vertical')
         end,
         desc = 'Toggle Terminal (vertical) [count = terminal #]',
-      },
-      {
-        '<leader>tT',
-        function()
-          require('toggleterm').toggle(vim.v.count1, nil, nil, 'tab')
-        end,
-        desc = 'Toggle Terminal (tab) [count = terminal #]',
       },
     },
     opts = {
@@ -746,20 +747,6 @@ require('lazy').setup({
         end,
       })
     end,
-  },
-  {
-    'williamboman/mason.nvim',
-    opts = {
-      ensure_installed = {
-        'rust_analyzer',
-        'clangd',
-        'clang_format',
-        'go_pls',
-      },
-      function()
-        require('mason').setup()
-      end,
-    },
   },
   {
     'christoomey/vim-tmux-navigator',
@@ -919,18 +906,10 @@ require('lazy').setup({
     'neovim/nvim-lspconfig',
     dependencies = {
       -- Automatically install LSPs and related tools to stdpath for Neovim
-      {
-        'williamboman/mason.nvim',
-        opts = {
-          ensure_installed = {
-            'clangd',
-            'rust-analyzer',
-            'go_pls',
-            'clang_format',
-          },
-        },
-        config = true,
-      }, -- NOTE: Must be loaded before dependants
+      -- `ensure_installed` isn't a mason.nvim setup option (that's
+      -- mason-tool-installer, configured below from the `servers` table),
+      -- so it's left plain here; mason.setup() is called explicitly below.
+      'williamboman/mason.nvim', -- NOTE: Must be loaded before dependants
       'williamboman/mason-lspconfig.nvim',
       'WhoIsSethDaniel/mason-tool-installer.nvim',
 
@@ -1112,10 +1091,10 @@ require('lazy').setup({
       --  - settings (table): Override the default settings passed when initializing the server.
       --        For example, to see the options for `lua_ls`, you could go to: https://luals.github.io/wiki/settings/
       local servers = {
-        -- clangd = {},
-        -- gopls = {},
+        clangd = {},
+        gopls = {},
         -- pyright = {},
-        -- rust_analyzer = {},
+        -- rust_analyzer = {}, -- handled separately by rustaceanvim
         -- ... etc. See `:help lspconfig-all` for a list of all the pre-configured LSPs
         --
         -- Some languages (like typescript) have entire language plugins that can be useful:
@@ -1154,6 +1133,7 @@ require('lazy').setup({
       local ensure_installed = vim.tbl_keys(servers or {})
       vim.list_extend(ensure_installed, {
         'stylua', -- Used to format Lua code
+        'clang-format', -- Used to format C/C++ code
       })
       require('mason-tool-installer').setup { ensure_installed = ensure_installed }
 
@@ -1200,6 +1180,8 @@ require('lazy').setup({
       end,
       formatters_by_ft = {
         lua = { 'stylua' },
+        c = { 'clang-format' },
+        cpp = { 'clang-format' },
         -- Conform can also run multiple formatters sequentially
         -- python = { "isort", "black" },
         --
