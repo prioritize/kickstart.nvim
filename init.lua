@@ -695,13 +695,6 @@ require('lazy').setup({
       {
         '<leader>tt',
         function()
-          require('toggleterm').toggle(vim.v.count1, nil, nil, 'float')
-        end,
-        desc = 'Toggle Terminal (float) [count = terminal #]',
-      },
-      {
-        '<leader>th',
-        function()
           -- toggleterm's find_open_windows() ignores direction, so an open
           -- float/vertical/tab terminal would otherwise get split off of
           -- (inheriting its full height) instead of a fresh bottom split
@@ -712,7 +705,14 @@ require('lazy').setup({
           end
           require('toggleterm').toggle(vim.v.count1, 15, nil, 'horizontal')
         end,
-        desc = 'Toggle Terminal (horizontal) [count = terminal #]',
+        desc = 'Toggle Terminal (bottom split) [count = terminal #]',
+      },
+      {
+        '<leader>tT',
+        function()
+          require('toggleterm').toggle(vim.v.count1, nil, nil, 'float')
+        end,
+        desc = 'Toggle Terminal (float) [count = terminal #]',
       },
       {
         '<leader>tv',
