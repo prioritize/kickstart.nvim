@@ -1092,7 +1092,23 @@ require('lazy').setup({
       --        For example, to see the options for `lua_ls`, you could go to: https://luals.github.io/wiki/settings/
       local servers = {
         clangd = {},
-        gopls = {},
+        gopls = {
+          settings = {
+            gopls = {
+              -- gopls returns no inlay hints unless they are enabled here;
+              -- toggle them per-buffer with <leader>th
+              hints = {
+                assignVariableTypes = true,
+                compositeLiteralFields = true,
+                compositeLiteralTypes = true,
+                constantValues = true,
+                functionTypeParameters = true,
+                parameterNames = true,
+                rangeVariableTypes = true,
+              },
+            },
+          },
+        },
         -- pyright = {},
         -- rust_analyzer = {}, -- handled separately by rustaceanvim
         -- ... etc. See `:help lspconfig-all` for a list of all the pre-configured LSPs
@@ -1139,18 +1155,16 @@ require('lazy').setup({
       })
       require('mason-tool-installer').setup { ensure_installed = ensure_installed }
 
-      require('mason-lspconfig').setup {
-        handlers = {
-          function(server_name)
-            local server = servers[server_name] or {}
-            -- This handles overriding only values explicitly passed
-            -- by the server configuration above. Useful when disabling
-            -- certain features of an LSP (for example, turning off formatting for tsserver)
-            server.capabilities = vim.tbl_deep_extend('force', {}, capabilities, server.capabilities or {})
-            require('lspconfig')[server_name].setup(server)
-          end,
-        },
-      }
+      -- mason-lspconfig v2 dropped the `handlers` option and enables installed
+      -- servers itself, so per-server config is registered through
+      -- `vim.lsp.config()` instead. Each table above is merged over the
+      -- defaults nvim-lspconfig ships for that server.
+      for server_name, server in pairs(servers) do
+        server.capabilities = vim.tbl_deep_extend('force', {}, capabilities, server.capabilities or {})
+        vim.lsp.config(server_name, server)
+      end
+
+      require('mason-lspconfig').setup {}
     end,
   },
 
